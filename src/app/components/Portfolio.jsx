@@ -238,7 +238,7 @@ export default function Portfolio() {
   const projects = [
     {
       title: "Crossie",
-      description: "Chrome Extension that helps you annotate websites across the web with 5/5 rating & 200+ users",
+      description: "Chrome Extension that helps you annotate websites across the web with 5/5 rating & 500+ users",
       tags: ["React", "TypeScript", "Supabase", "Cron"],
       github: "https://github.com/hashemalo/crossie",
       demo: "https://trycrossie.vercel.app"
