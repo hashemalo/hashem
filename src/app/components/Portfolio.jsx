@@ -237,6 +237,13 @@ export default function Portfolio() {
   // Sample data - replace with your actual data
   const projects = [
     {
+      title: "Crossie",
+      description: "Chrome Extension that helps you annotate websites across the web with 5/5 rating & 200+ users",
+      tags: ["React", "TypeScript", "Supabase", "Cron"],
+      github: "https://github.com/hashemalo/crossie",
+      demo: "https://trycrossie.vercel.app"
+    },
+    {
       title: "Dr. Terp",
       description: "Helping 200+ UMD Students make data-driven course decisions, by scraping course data and grades",
       tags: ["React", "Python", "BeautifulSoup", "FastAPI"],
