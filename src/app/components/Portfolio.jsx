@@ -11,6 +11,7 @@ import {
   FileText,
   Linkedin,
   Mail,
+  Users,
 } from "lucide-react";
 
 import Image from "next/image";
@@ -36,6 +37,8 @@ const SpaceBackground = () => {
     if (!ctx) return;
 
     const stars = [];
+    const shootingStars = [];
+    let animationId;
 
     const resize = () => {
       canvas.width = window.innerWidth;
@@ -54,22 +57,86 @@ const SpaceBackground = () => {
       }
     };
 
+    const createShootingStar = () => {
+      const side = Math.random() < 0.5 ? 'top' : 'left';
+      const shootingStar = {
+        x: side === 'top' ? Math.random() * canvas.width : -50,
+        y: side === 'top' ? -50 : Math.random() * canvas.height,
+        vx: (Math.random() * 3 + 2) * (side === 'top' ? (Math.random() < 0.5 ? 1 : -1) : 1),
+        vy: (Math.random() * 3 + 2) * (side === 'left' ? (Math.random() < 0.5 ? 1 : -1) : 1),
+        length: Math.random() * 80 + 20,
+        opacity: 1,
+        life: 1,
+      };
+      shootingStars.push(shootingStar);
+    };
+
+    const updateShootingStars = () => {
+      for (let i = shootingStars.length - 1; i >= 0; i--) {
+        const star = shootingStars[i];
+        star.x += star.vx;
+        star.y += star.vy;
+        star.life -= 0.01;
+        star.opacity = star.life;
+
+        if (star.life <= 0 || star.x > canvas.width + 100 || star.y > canvas.height + 100 || star.x < -100 || star.y < -100) {
+          shootingStars.splice(i, 1);
+        }
+      }
+    };
+
+    const drawShootingStars = () => {
+      shootingStars.forEach((star) => {
+        const gradient = ctx.createLinearGradient(
+          star.x, star.y,
+          star.x - star.vx * star.length / 10, star.y - star.vy * star.length / 10
+        );
+        gradient.addColorStop(0, `rgba(255, 255, 255, ${star.opacity})`);
+        gradient.addColorStop(0.5, `rgba(135, 206, 250, ${star.opacity * 0.8})`);
+        gradient.addColorStop(1, `rgba(255, 255, 255, 0)`);
+
+        ctx.strokeStyle = gradient;
+        ctx.lineWidth = Math.random() * 2 + 1;
+        ctx.beginPath();
+        ctx.moveTo(star.x, star.y);
+        ctx.lineTo(star.x - star.vx * star.length / 10, star.y - star.vy * star.length / 10);
+        ctx.stroke();
+      });
+    };
+
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      // Draw static stars
       stars.forEach((star) => {
         ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
         ctx.beginPath();
         ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
         ctx.fill();
       });
+
+      // Update and draw shooting stars
+      updateShootingStars();
+      drawShootingStars();
+
+      // Occasionally create new shooting stars
+      if (Math.random() < 0.01) { // Adjust frequency here (0.003 = ~0.3% chance per frame)
+        createShootingStar();
+      }
+
+      animationId = requestAnimationFrame(draw);
     };
 
     resize();
     draw();
 
     window.addEventListener("resize", resize);
-    return () => window.removeEventListener("resize", resize);
+    return () => {
+      window.removeEventListener("resize", resize);
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+    };
   }, []);
 
   return (
@@ -128,50 +195,23 @@ const Astronaut = ({ index }) => {
 };
 
 // Project Card Component
-const ProjectCard = ({ title, description, tags, github, demo }) => {
+const ProjectCard = ({ title, description, github, demo }) => {
+  const handleClick = () => {
+    if (demo) {
+      window.open(demo, '_blank');
+    } else if (github) {
+      window.open(github, '_blank');
+    }
+  };
+
   return (
-    <div className="group relative overflow-hidden rounded-lg bg-white/5 backdrop-blur-sm border border-white/10 transition-all hover:border-white/20 hover:bg-white/10">
-      <div className="p-4 space-y-3">
-        <h3 className="text-lg font-semibold text-white">{title}</h3>
-        <p className="text-sm text-gray-300 line-clamp-2">{description}</p>
-
-        <div className="flex flex-wrap gap-1.5">
-          {tags.map((tag, index) => (
-            <span
-              key={index}
-              className="px-2 py-0.5 text-xs font-medium text-blue-200 bg-blue-900/30 rounded-full border border-blue-800/50"
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
-
-        <div className="flex gap-3 pt-1">
-          {github && (
-            <a
-              href={github}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-xs text-gray-300 hover:text-white transition-colors"
-              aria-label={`View ${title} source code on GitHub`}
-            >
-              <Github className="w-3.5 h-3.5" />
-              <span>Code</span>
-            </a>
-          )}
-          {demo && (
-            <a
-              href={demo}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-xs text-gray-300 hover:text-white transition-colors"
-              aria-label={`View ${title} live demo`}
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
-              <span>Demo</span>
-            </a>
-          )}
-        </div>
+    <div 
+      className="group relative overflow-hidden rounded-lg bg-white/5 backdrop-blur-sm border border-white/10 transition-all hover:border-white/20 hover:bg-white/10 cursor-pointer"
+      onClick={handleClick}
+    >
+      <div className="p-3 space-y-2">
+        <h3 className="text-base font-semibold text-white">{title}</h3>
+        <p className="text-xs text-gray-300 line-clamp-2">{description}</p>
       </div>
     </div>
   );
@@ -182,27 +222,15 @@ const ExperienceCard = ({
   title,
   company,
   period,
-  description,
-  technologies,
 }) => {
   return (
-    <div className="relative pl-6 pb-6 border-l-2 border-white/10 last:border-l-0">
+    <div className="relative pl-6 pb-4 border-l-2 border-white/10 last:border-l-0">
       <div className="absolute left-0 transform -translate-x-1/2 w-3 h-3 bg-blue-500 rounded-full border-2 border-black" />
       <div className="space-y-1">
         <h3 className="text-lg font-semibold text-white">{title}</h3>
         <p className="text-sm text-blue-300">
           {company} • {period}
         </p>
-        <p className="text-sm text-gray-300">{description}</p>
-        {technologies && (
-          <div className="flex flex-wrap gap-1.5 pt-1">
-            {technologies.map((tech, index) => (
-              <span key={index} className="text-xs text-gray-400">
-                {tech}
-              </span>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );
@@ -238,59 +266,58 @@ export default function Portfolio() {
   const projects = [
     {
       title: "Crossie",
-      description: "Chrome Extension that helps you annotate websites across the web with 5/5 rating & 500+ users",
-      tags: ["React", "TypeScript", "Supabase", "Cron"],
-      github: "https://github.com/hashemalo/crossie",
+      description: "Chrome Extension for website annotation (500+ users)",
       demo: "https://trycrossie.vercel.app"
     },
     {
       title: "Dr. Terp",
-      description: "Helping 200+ UMD Students make data-driven course decisions, by scraping course data and grades",
-      tags: ["React", "Python", "BeautifulSoup", "FastAPI"],
-      github: "https://github.com/hashemalo/terpcord",
+      description: "Course decision platform for UMD students (2,000+ visits)",
       demo: "https://terpcord.vercel.app"
     },
     {
-      title: "Craving Hour Halal Foodtruck Website",
-      description: "Full Stack React, TailwindCSS app for a local food truck, powered by an admin portal integrated with (AWS Cloudfront, S3, Lambda)",
-      tags: ["AWS", "React", "FastAPI", "Tailwind", "Python(FASTAPI)"],
+      title: "Craving Hour Halal",
+      description: "Food truck website with admin portal (200+ daily visits)",
       demo: "https://www.cravinghourhalal.com"
     },
+  ]
+
+  const extracurriculars = [
     {
-      title: "Stock LSTM Prediction Model",
-      description: "TensorFlow LSTM model for predicting stock prices using historical data, achieving 90% accuracy.",
-      tags: ["TensorFlow", "Python"],
-      github: "https://github.com/hashemalo/LSTM"
+      title: "Project LIFT",
+      description: "Club helping 5+ small businesses save $50,000+ through tech solutions",
+      github: "https://projectliftumd.com"
     },
     {
-      title: "Malarai",
-      description: "Malaria ML Prediction Model with TensorFlow",
-      tags: ["TensorFlow", "Python"],
-      github: "https://github.com/hashemalo/malarai"
+      title: "Startup Shell Fellow",
+      description: "Startup Incubator for UMD students with $2 billion in venture value",
+      github: "https://startupshell.org"
     },
+    {
+      title: "Rock Climbing Athlete",
+      description: "Competitive Rock Climbing Athlete on UMD's Team",
+    }
   ]
 
   const experiences = [
     {
       title: "Software Engineer Intern",
       company: "4a Consulting, LLC",
-      period: "May 2025 - August 2025",
-      description: "Designed and developed scalable dashboards, platforms, and AI-powered tools to streamline applicant management, real-time interviews, and automated support.",
-      technologies: ["React", "TypeScript", "AWS(RDS)", "Python", "PostgreSQL", "FastAPI"]
+      period: "May 2025 - August 2025"
     },
     {
-      title: "Undergraduate Research Assistant - Quantum Machine Learning ",
+      title: "Undergraduate Research Assistant - Quantum Machine Learning",
       company: "University of Maryland, College Park",
-      period: "January 2025 - Present",
-      description: "Engineered and optimized multi-asset QLSTM pipelines on real quantum hardware to improve back-test speed, predictive accuracy, and error rates, enabling faster, more reliable strategy validation at scale.",
-      technologies: ["Python", "PennyLane", "PyTorch", "IonQ"]
+      period: "January 2025 - Present"
     },
     {
       title: "Software Engineer Intern",
       company: "Mildenberg Boender & Associates",
-      period: "May 2024 - August 2024",
-      description: "Built and optimized internal and external platforms to streamline payroll, project management, and document search for 50+ employees, while enhancing user engagement with a modern, responsive site redesign.",
-      technologies: ["React", "Node.js", "Firebase", "Typescript"]
+      period: "May 2024 - August 2024"
+    },
+    {
+      title: "Chief Technology Officer",
+      company: "GeneticFit Labs",
+      period: "September 2024 - March 2025"
     }
   ]
 
@@ -336,13 +363,6 @@ export default function Portfolio() {
                 <p className="text-lg text-gray-300 mb-4">
                   Computer Science and Mathematics '27 @ UMD, College Park
                 </p>
-                <div className="space-y-3">
-                  <p className="text-base text-gray-300 leading-relaxed">
-                    Hey! I'm Hashem, a CS + Math Student at UMD, College Park. I am currently interning
-                    at 4a Consulting, LLC. Additionally, I am currently doing research at UMD on Quantum
-                    Machine Learning and QLSTMs under Dr. Shabnam Jabeen.
-                  </p>
-                </div>
               </motion.div>
 
               {/* Experience */}
@@ -351,14 +371,16 @@ export default function Portfolio() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8, delay: 0.3 }}
               >
-                <div className="flex items-center gap-2 mb-4">
-                  <Briefcase className="w-5 h-5 text-blue-400" />
-                  <h2 className="text-2xl font-bold text-white">Experience</h2>
-                </div>
-                <div className="space-y-4">
-                  {experiences.map((exp, index) => (
-                    <ExperienceCard key={index} {...exp} />
-                  ))}
+                <div className="rounded-lg bg-white/5 backdrop-blur-sm border border-white/10 p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Briefcase className="w-5 h-5 text-blue-400" />
+                    <h2 className="text-2xl font-bold text-white">Experience</h2>
+                  </div>
+                  <div className="space-y-3">
+                    {experiences.map((exp, index) => (
+                      <ExperienceCard key={index} {...exp} />
+                    ))}
+                  </div>
                 </div>
               </motion.div>
 
@@ -420,9 +442,26 @@ export default function Portfolio() {
                   <Code className="w-5 h-5 text-blue-400" />
                   <h2 className="text-2xl font-bold text-white">Projects</h2>
                 </div>
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 gap-3">
                   {projects.map((project, index) => (
                     <ProjectCard key={index} {...project} />
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Extracurriculars */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.1 }}
+              >
+                <div className="flex items-center gap-2 mb-4">
+                  <Users className="w-5 h-5 text-blue-400" />
+                  <h2 className="text-2xl font-bold text-white">Extracurriculars</h2>
+                </div>
+                <div className="grid grid-cols-1 gap-3">
+                  {extracurriculars.map((item, index) => (
+                    <ProjectCard key={index} {...item} />
                   ))}
                 </div>
               </motion.div>
