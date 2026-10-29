@@ -1,9 +1,9 @@
 const experience = [
   {
-    role: "Research Assistant",
-    org: "University of Maryland — Furong Lab",
+    role: "",
+    org: "Independent Researcher",
     period: "August 2026 – Present",
-    note: "Finding more efficient model steering methods",
+    note: "Chain-of-Thought Monitorability, advised by Aaquib Syed",
   },
   {
     role: "Software Engineering Intern",
@@ -34,7 +34,7 @@ const experience = [
 export default function CV() {
   return (
     <main className="max-w-2xl mx-auto px-6 pb-24">
-      <ul className="divide-y divide-neutral-200">
+      <ul className="divide-y divide-stone-300/60">
         {experience.map((item) => (
           <li
             key={item.role + item.org}
@@ -42,7 +42,9 @@ export default function CV() {
           >
             <div>
               <p className="text-neutral-900 font-medium">{item.org}</p>
-              <p className="text-sm text-neutral-500">{item.role}</p>
+              {item.role && (
+                <p className="text-sm text-neutral-500">{item.role}</p>
+              )}
               <p className="text-xs text-neutral-400 mt-0.5">{item.note}</p>
             </div>
             <p className="text-sm text-neutral-400 whitespace-nowrap">

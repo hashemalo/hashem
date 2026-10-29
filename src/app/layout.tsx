@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
+import ClickLines from "@/components/ClickLines";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,7 +21,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} antialiased bg-white text-neutral-900`}>
+      <body className={`${geistSans.variable} antialiased text-neutral-900`}>
+        <ClickLines />
         <Header />
         {children}
       </body>
